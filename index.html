@@ -58,7 +58,7 @@
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-3 leading-tight" id="eventTitle">Tên Sự Kiện</h1>
                 <div class="flex items-center justify-center text-slate-500 font-medium">
                     <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    <span id="eventDate"></span>
+                    <span>Ngày tổ chức: <span id="eventDate"></span></span>
                 </div>
             </div>
 
@@ -155,13 +155,28 @@
             showState('message');
         }
 
-        // Chuyển "dd/MM/yyyy" thành "Ngày dd Tháng MM Năm yyyy"
+        // Xử lý hiển thị Ngày/Tháng/Năm sửa lỗi múi giờ
         function formatDisplayDate(dateString) {
             if (!dateString) return "";
-            const parts = dateString.split('/');
-            if (parts.length === 3) {
-                return `Ngày ${parts[0]} Tháng ${parts[1]} Năm ${parts[2]}`;
+            
+            // Trường hợp dữ liệu trả về dạng ISO (có chứa chữ T): "2026-11-04T17:00:00.000Z"
+            // Dùng đối tượng Date() để tự động bù múi giờ địa phương
+            if (String(dateString).includes('T')) {
+                const dateObj = new Date(dateString);
+                if (!isNaN(dateObj.getTime())) {
+                    const day = String(dateObj.getDate()).padStart(2, '0');
+                    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                    const year = dateObj.getFullYear();
+                    return `${day}/${month}/${year}`;
+                }
             }
+
+            // Trường hợp dữ liệu đã có sẵn định dạng dd/MM/yyyy
+            const slashParts = String(dateString).split('/');
+            if (slashParts.length === 3) {
+                return `${slashParts[0]}/${slashParts[1]}/${slashParts[2]}`;
+            }
+            
             return dateString; // Fallback
         }
 
@@ -235,7 +250,8 @@
                 } else if (data.status === "SUCCESS") {
                     currentEventId = data.data.maSuKien;
                     document.getElementById('eventTitle').innerText = data.data.tenSuKien;
-                    // Hiển thị ngày định dạng "Ngày DD Tháng MM Năm YYYY"
+                    
+                    // Hiển thị ngày tổ chức đã qua sửa lỗi
                     document.getElementById('eventDate').innerText = formatDisplayDate(data.data.ngayToChuc);
                     showState('form');
                 } else {
