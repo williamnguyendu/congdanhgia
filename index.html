@@ -6,110 +6,132 @@
     <title>Cổng Đánh Giá Sự Kiện</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Animation Loading Pulse */
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         
-        /* Cute Heart Bounce Animation */
-        .bounce-heart { animation: bounce 1.5s infinite; transform-origin: bottom; }
-        @keyframes bounce { 
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-20px) scale(1.1); }
-            60% { transform: translateY(-10px) scale(1.05); }
-        }
-
-        /* Star rating styling */
-        .star { cursor: pointer; color: #d1d5db; transition: color 0.2s, transform 0.1s; }
-        .star.active, .star:hover, .star.hovered { color: #f59e0b; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        /* Smooth Star Animation */
+        .star { cursor: pointer; color: #e2e8f0; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .star.hovered { color: #facc15; transform: scale(1.15); }
+        .star.active { color: #f59e0b; }
         .star:active { transform: scale(0.9); }
+        
+        /* Spinner */
+        .spinner {
+            border: 3px solid rgba(59, 130, 246, 0.1);
+            border-left-color: #3b82f6;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Cute pop animation for success */
+        .pop-in { animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex flex-col justify-between text-gray-800 font-sans">
+<body class="bg-gradient-to-br from-blue-50 via-white to-blue-50 min-h-screen flex flex-col justify-between text-slate-800">
 
-    <!-- Container Chính -->
-    <main class="flex-grow flex items-center justify-center p-4 w-full max-w-3xl mx-auto">
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6 w-full max-w-3xl mx-auto">
         
-        <!-- Loading State -->
-        <div id="loadingState" class="text-center w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-            <div class="loader mb-4"></div>
-            <p class="text-gray-500 font-medium animate-pulse">Đang tải dữ liệu sự kiện...</p>
+        <!-- ================= LOADING STATE ================= -->
+        <div id="loadingState" class="w-full bg-white p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col items-center justify-center">
+            <div class="spinner mb-4"></div>
+            <p class="text-slate-500 font-medium animate-pulse">Đang đồng bộ dữ liệu hệ thống...</p>
         </div>
 
-        <!-- Thông báo (Lỗi / Info) -->
-        <div id="messageState" class="hidden text-center w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-            <div id="messageIcon" class="text-4xl mb-4"></div>
-            <p id="messageText" class="text-lg text-gray-700 leading-relaxed"></p>
+        <!-- ================= MESSAGE STATE ================= -->
+        <div id="messageState" class="hidden text-center w-full bg-white p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+            <div id="messageIcon" class="text-5xl mb-5"></div>
+            <p id="messageText" class="text-lg text-slate-600 leading-relaxed font-medium"></p>
         </div>
 
-        <!-- Form Đánh Giá -->
-        <div id="formState" class="hidden w-full bg-white p-6 md:p-10 rounded-2xl shadow-sm border border-gray-100">
-            <div class="text-center mb-8 border-b pb-6">
-                <h1 class="text-2xl font-bold text-blue-600 mb-2" id="eventTitle">Tên Sự Kiện</h1>
-                <p class="text-gray-500 text-sm flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                    Ngày tổ chức: <span id="eventDate" class="font-medium"></span>
-                </p>
+        <!-- ================= FORM STATE ================= -->
+        <div id="formState" class="hidden w-full bg-white p-6 sm:p-10 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100">
+            <div class="text-center mb-10 pb-8 border-b border-slate-100">
+                <div class="inline-block bg-blue-100 text-blue-700 font-semibold px-4 py-1 rounded-full text-sm mb-4">Phiếu Khảo Sát</div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-3 leading-tight" id="eventTitle">Tên Sự Kiện</h1>
+                <div class="flex items-center justify-center text-slate-500 font-medium">
+                    <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span id="eventDate"></span>
+                </div>
             </div>
 
-            <form id="ratingForm" class="space-y-8">
+            <form id="ratingForm" class="space-y-10">
+                
                 <!-- Hình thức -->
                 <div class="rating-group" data-category="hinhThuc">
-                    <label class="block font-semibold text-gray-700 mb-2">1. Đánh giá về hình thức tổ chức <span class="text-red-500">*</span></label>
-                    <div class="flex flex-wrap gap-1 md:gap-2 stars-container">
-                        <!-- JS sẽ render 10 sao vào đây -->
+                    <div class="flex justify-between items-end mb-3">
+                        <label class="block font-semibold text-slate-800 text-lg">1. Hình thức tổ chức <span class="text-rose-500">*</span></label>
+                        <span class="score-display text-slate-400 font-bold text-lg bg-slate-50 px-3 py-1 rounded-xl border border-slate-100">0/10</span>
                     </div>
+                    <div class="flex flex-wrap gap-1 sm:gap-2 stars-container bg-slate-50 p-3 rounded-2xl border border-slate-100"></div>
                     <input type="hidden" name="hinhThuc" required>
                 </div>
 
                 <!-- Nội dung -->
                 <div class="rating-group" data-category="noiDung">
-                    <label class="block font-semibold text-gray-700 mb-2">2. Đánh giá về nội dung tổ chức <span class="text-red-500">*</span></label>
-                    <div class="flex flex-wrap gap-1 md:gap-2 stars-container"></div>
+                    <div class="flex justify-between items-end mb-3">
+                        <label class="block font-semibold text-slate-800 text-lg">2. Nội dung chương trình <span class="text-rose-500">*</span></label>
+                        <span class="score-display text-slate-400 font-bold text-lg bg-slate-50 px-3 py-1 rounded-xl border border-slate-100">0/10</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1 sm:gap-2 stars-container bg-slate-50 p-3 rounded-2xl border border-slate-100"></div>
                     <input type="hidden" name="noiDung" required>
                 </div>
 
                 <!-- Bổ ích -->
                 <div class="rating-group" data-category="boIch">
-                    <label class="block font-semibold text-gray-700 mb-2">3. Đánh giá về sự bổ ích với bản thân <span class="text-red-500">*</span></label>
-                    <div class="flex flex-wrap gap-1 md:gap-2 stars-container"></div>
+                    <div class="flex justify-between items-end mb-3">
+                        <label class="block font-semibold text-slate-800 text-lg">3. Sự bổ ích với bản thân <span class="text-rose-500">*</span></label>
+                        <span class="score-display text-slate-400 font-bold text-lg bg-slate-50 px-3 py-1 rounded-xl border border-slate-100">0/10</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1 sm:gap-2 stars-container bg-slate-50 p-3 rounded-2xl border border-slate-100"></div>
                     <input type="hidden" name="boIch" required>
                 </div>
 
                 <!-- Góp ý -->
                 <div>
-                    <label class="block font-semibold text-gray-700 mb-2">4. Nội dung góp ý khác (không bắt buộc)</label>
-                    <textarea name="gopY" rows="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Hãy chia sẻ thêm ý kiến của bạn..."></textarea>
+                    <label class="block font-semibold text-slate-800 text-lg mb-3">4. Góp ý thêm (Tùy chọn)</label>
+                    <textarea name="gopY" rows="4" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white outline-none transition-all resize-none text-slate-700" placeholder="Bạn có ý tưởng hoặc góp ý gì để sự kiện lần sau tốt hơn không?"></textarea>
                 </div>
 
-                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 flex items-center justify-center gap-2">
-                    <span>Gửi đánh giá</span>
-                </button>
+                <div class="pt-4">
+                    <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg py-4 px-6 rounded-2xl transition-all duration-300 shadow-[0_8px_20px_rgb(37,99,235,0.25)] hover:shadow-[0_12px_25px_rgb(37,99,235,0.4)] flex items-center justify-center gap-3">
+                        <span>Gửi Đánh Giá</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                </div>
             </form>
         </div>
 
-        <!-- Success Animation -->
-        <div id="successState" class="hidden text-center w-full bg-white p-10 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
-            <svg class="bounce-heart w-24 h-24 text-pink-500 mb-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-            </svg>
-            <h2 class="text-3xl font-extrabold text-gray-800 mb-3">Yayyy! Cảm ơn bạn! 💖</h2>
-            <p class="text-gray-500">Đánh giá của bạn đã được ghi nhận thành công.</p>
+        <!-- ================= SUCCESS STATE ================= -->
+        <div id="successState" class="hidden text-center w-full bg-white p-12 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 flex flex-col items-center pop-in">
+            <div class="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center mb-6">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+            </div>
+            <h2 class="text-3xl font-extrabold text-slate-800 mb-3">Thành công!</h2>
+            <p class="text-slate-500 text-lg">Cảm ơn bạn đã dành thời gian đánh giá sự kiện. Góp ý của bạn rất trân quý đối với chúng tôi.</p>
         </div>
 
     </main>
 
     <!-- Footer -->
-    <footer class="w-full text-center py-6 text-sm text-gray-500 border-t bg-white">
-        Hệ thống đánh giá được xây dựng bởi <a href="http://www.pridehome.vn" target="_blank" class="font-semibold text-blue-600 hover:underline">Pride Home</a>.
+    <footer class="w-full text-center py-6 text-sm text-slate-400 bg-transparent">
+        Hệ thống đánh giá được xây dựng bởi <a href="http://www.pridehome.vn" target="_blank" class="font-bold text-blue-500 hover:text-blue-700 transition-colors">Pride Home</a>.
     </footer>
 
     <script>
-        // === CẤU HÌNH WEB APP URL TỪ GOOGLE APPS SCRIPT ===
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyv6tBnPVgqKEgReV4frL78TMIefUsDr4jrkHkMniq5Vmq4fxvRDJxO7X2UGqAFNSCP/exec"; 
+        // === DÁN URL APP SCRIPT MỚI NHẤT VÀO ĐÂY ===
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz7TzwcGwikI23bNpUMOpJANhtFM6GfaSX0T4VSqL1k7xVj4iGOwGRWNSY0ReBB3Jz1/exec"; 
         
         let currentEventId = null;
 
-        // Quản lý UI States
+        // UI Manager
         const ui = {
             loading: document.getElementById('loadingState'),
             message: document.getElementById('messageState'),
@@ -122,105 +144,127 @@
 
         function showState(state) {
             Object.values(ui).forEach(el => {
-                if (el && el.classList) {
-                    if (['loadingState', 'messageState', 'formState', 'successState'].includes(el.id)) {
-                        el.classList.add('hidden');
-                    }
-                }
+                if (el && el.classList && el.id.endsWith('State')) el.classList.add('hidden');
             });
             ui[state].classList.remove('hidden');
         }
 
-        function showMessage(text, icon = "ℹ️") {
+        function showMessage(text, icon) {
             ui.msgIcon.innerHTML = icon;
             ui.msgText.innerHTML = text;
             showState('message');
         }
 
-        // Render 10 stars cho mỗi nhóm
-        const starSVG = `<svg class="w-8 h-8 sm:w-10 sm:h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
+        // Chuyển "dd/MM/yyyy" thành "Ngày dd Tháng MM Năm yyyy"
+        function formatDisplayDate(dateString) {
+            if (!dateString) return "";
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                return `Ngày ${parts[0]} Tháng ${parts[1]} Năm ${parts[2]}`;
+            }
+            return dateString; // Fallback
+        }
+
+        // Tạo chức năng Đánh Giá Sao + Hiển thị số điểm
+        const starSVG = `<svg class="w-8 h-8 sm:w-10 sm:h-10 mx-auto" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
         
         document.querySelectorAll('.rating-group').forEach(group => {
             const container = group.querySelector('.stars-container');
             const input = group.querySelector('input[type="hidden"]');
+            const scoreDisplay = group.querySelector('.score-display');
             
             for (let i = 1; i <= 10; i++) {
-                const star = document.createElement('div');
-                star.className = 'star';
-                star.innerHTML = starSVG;
-                star.dataset.value = i;
+                const starWrapper = document.createElement('div');
+                starWrapper.className = 'flex-1 text-center';
                 
-                // Hover effect
+                const star = document.createElement('div');
+                star.className = 'star p-1';
+                star.innerHTML = starSVG;
+                
+                // Hover effect (Hiển thị điểm tạm thời)
                 star.addEventListener('mouseenter', () => {
-                    const allStars = container.querySelectorAll('.star');
-                    allStars.forEach((s, idx) => {
+                    container.querySelectorAll('.star').forEach((s, idx) => {
                         s.classList.toggle('hovered', idx < i);
                     });
+                    scoreDisplay.innerText = `${i}/10`;
+                    scoreDisplay.classList.add('text-amber-500', 'bg-amber-50', 'border-amber-200');
+                    scoreDisplay.classList.remove('text-slate-400', 'bg-slate-50', 'border-slate-100');
                 });
                 
-                container.addEventListener('mouseleave', () => {
+                // Trả về số điểm đã chọn khi rời chuột
+                star.addEventListener('mouseleave', () => {
                     container.querySelectorAll('.star').forEach(s => s.classList.remove('hovered'));
+                    if (input.value) {
+                        scoreDisplay.innerText = `${input.value}/10`;
+                        scoreDisplay.classList.add('text-amber-500', 'bg-amber-50', 'border-amber-200');
+                        scoreDisplay.classList.remove('text-slate-400', 'bg-slate-50', 'border-slate-100');
+                    } else {
+                        scoreDisplay.innerText = `0/10`;
+                        scoreDisplay.classList.add('text-slate-400', 'bg-slate-50', 'border-slate-100');
+                        scoreDisplay.classList.remove('text-amber-500', 'bg-amber-50', 'border-amber-200');
+                    }
                 });
 
-                // Click event
+                // Click event (Chốt điểm)
                 star.addEventListener('click', () => {
                     input.value = i;
                     container.querySelectorAll('.star').forEach((s, idx) => {
-                        if (idx < i) {
-                            s.classList.add('active');
-                            s.style.color = '#f59e0b';
-                        } else {
-                            s.classList.remove('active');
-                            s.style.color = '#d1d5db';
-                        }
+                        s.classList.toggle('active', idx < i);
                     });
+                    scoreDisplay.innerText = `${i}/10`;
                 });
-                container.appendChild(star);
+
+                starWrapper.appendChild(star);
+                container.appendChild(starWrapper);
             }
         });
 
-        // Tải dữ liệu sự kiện
+        // Load dữ liệu
         async function loadEventData() {
             try {
-                const response = await fetch(WEB_APP_URL);
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
                 const data = await response.json();
                 
                 if (data.status === "NO_EVENT") {
-                    showMessage('Cổng đánh giá chưa mở, vui lòng liên hệ Quản trị viên. <br><span class="font-bold text-blue-600 mt-2 block">Hotline 0987.500.533</span> hoặc website <a href="http://www.pridehome.vn" class="text-blue-600 underline">www.pridehome.vn</a>', "🔒");
+                    showMessage('Cổng đánh giá hiện chưa mở.<br><span class="block mt-3 text-base text-slate-500">Vui lòng liên hệ Quản trị viên theo Hotline <b class="text-blue-600">0987.500.533</b><br>hoặc website <a href="http://www.pridehome.vn" class="text-blue-600 hover:underline">www.pridehome.vn</a></span>', "🔒");
                 } else if (data.status === "MULTIPLE_EVENTS") {
-                    showMessage("Quản trị viên vui lòng chọn một sự kiện để mở đánh giá.", "⚠️");
+                    showMessage("Hệ thống đang mở nhiều hơn một sự kiện. Quản trị viên vui lòng kiểm tra lại cấu hình.", "⚠️");
                 } else if (data.status === "SUCCESS") {
                     currentEventId = data.data.maSuKien;
                     document.getElementById('eventTitle').innerText = data.data.tenSuKien;
-                    document.getElementById('eventDate').innerText = data.data.ngayToChuc;
+                    // Hiển thị ngày định dạng "Ngày DD Tháng MM Năm YYYY"
+                    document.getElementById('eventDate').innerText = formatDisplayDate(data.data.ngayToChuc);
                     showState('form');
                 } else {
-                    showMessage("Đã xảy ra lỗi khi lấy dữ liệu sự kiện.", "❌");
+                    showMessage("Đã xảy ra lỗi hệ thống: " + data.message, "❌");
                 }
             } catch (error) {
-                showMessage("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại URL App Script.", "🔌");
+                showMessage("Lỗi kết nối. Vui lòng kiểm tra lại đường truyền mạng hoặc cấu hình URL.", "🔌");
             }
         }
 
-        // Xử lý gửi Form
+        // Xử lý Submit
         document.getElementById('ratingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Validate sao bắt buộc
             const hinhThuc = document.querySelector('input[name="hinhThuc"]').value;
             const noiDung = document.querySelector('input[name="noiDung"]').value;
             const boIch = document.querySelector('input[name="boIch"]').value;
             
             if (!hinhThuc || !noiDung || !boIch) {
-                alert("Vui lòng chọn số sao (từ 1-10) cho tất cả các tiêu chí đánh giá!");
+                alert("Vui lòng chấm điểm đầy đủ cho cả 3 tiêu chí nhé!");
                 return;
             }
 
-            // Giao diện loading nút Submit
-            const originalBtnText = ui.btn.innerHTML;
+            const originalBtnContent = ui.btn.innerHTML;
             ui.btn.disabled = true;
-            ui.btn.innerHTML = `<div class="loader" style="width:20px;height:20px;border-width:2px;"></div> Đang gửi...`;
-            ui.btn.classList.replace('bg-blue-600', 'bg-gray-400');
+            ui.btn.innerHTML = `<div class="spinner border-white/20 border-l-white w-6 h-6 mr-2"></div> Đang gửi...`;
+            ui.btn.classList.replace('bg-blue-600', 'bg-slate-400');
+            ui.btn.classList.replace('hover:bg-blue-700', 'hover:bg-slate-400');
+            ui.btn.classList.remove('shadow-[0_8px_20px_rgb(37,99,235,0.25)]', 'hover:shadow-[0_12px_25px_rgb(37,99,235,0.4)]');
 
             const payload = {
                 maSuKien: currentEventId,
@@ -233,6 +277,8 @@
             try {
                 const response = await fetch(WEB_APP_URL, {
                     method: 'POST',
+                    redirect: 'follow',
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify(payload)
                 });
                 
@@ -241,19 +287,23 @@
                     showState('success');
                 } else {
                     alert("Có lỗi xảy ra: " + data.message);
-                    ui.btn.disabled = false;
-                    ui.btn.innerHTML = originalBtnText;
-                    ui.btn.classList.replace('bg-gray-400', 'bg-blue-600');
+                    resetButton(originalBtnContent);
                 }
             } catch (error) {
                 alert("Lỗi mạng khi gửi đánh giá. Vui lòng thử lại.");
-                ui.btn.disabled = false;
-                ui.btn.innerHTML = originalBtnText;
-                ui.btn.classList.replace('bg-gray-400', 'bg-blue-600');
+                resetButton(originalBtnContent);
             }
         });
 
-        // Khởi chạy
+        function resetButton(content) {
+            ui.btn.disabled = false;
+            ui.btn.innerHTML = content;
+            ui.btn.classList.replace('bg-slate-400', 'bg-blue-600');
+            ui.btn.classList.replace('hover:bg-slate-400', 'hover:bg-blue-700');
+            ui.btn.classList.add('shadow-[0_8px_20px_rgb(37,99,235,0.25)]', 'hover:shadow-[0_12px_25px_rgb(37,99,235,0.4)]');
+        }
+
+        // Khởi động
         loadEventData();
     </script>
 </body>
