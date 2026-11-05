@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cổng Đánh Giá Sự Kiện</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Animation Loading Pulse */
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3b82f6; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Cute Heart Bounce Animation */
+        .bounce-heart { animation: bounce 1.5s infinite; transform-origin: bottom; }
+        @keyframes bounce { 
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px) scale(1.1); }
+            60% { transform: translateY(-10px) scale(1.05); }
+        }
+
+        /* Star rating styling */
+        .star { cursor: pointer; color: #d1d5db; transition: color 0.2s, transform 0.1s; }
+        .star.active, .star:hover, .star.hovered { color: #f59e0b; }
+        .star:active { transform: scale(0.9); }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col justify-between text-gray-800 font-sans">
+
+    <!-- Container Chính -->
+    <main class="flex-grow flex items-center justify-center p-4 w-full max-w-3xl mx-auto">
+        
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+            <div class="loader mb-4"></div>
+            <p class="text-gray-500 font-medium animate-pulse">Đang tải dữ liệu sự kiện...</p>
+        </div>
+
+        <!-- Thông báo (Lỗi / Info) -->
+        <div id="messageState" class="hidden text-center w-full bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+            <div id="messageIcon" class="text-4xl mb-4"></div>
+            <p id="messageText" class="text-lg text-gray-700 leading-relaxed"></p>
+        </div>
+
+        <!-- Form Đánh Giá -->
+        <div id="formState" class="hidden w-full bg-white p-6 md:p-10 rounded-2xl shadow-sm border border-gray-100">
+            <div class="text-center mb-8 border-b pb-6">
+                <h1 class="text-2xl font-bold text-blue-600 mb-2" id="eventTitle">Tên Sự Kiện</h1>
+                <p class="text-gray-500 text-sm flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    Ngày tổ chức: <span id="eventDate" class="font-medium"></span>
+                </p>
+            </div>
+
+            <form id="ratingForm" class="space-y-8">
+                <!-- Hình thức -->
+                <div class="rating-group" data-category="hinhThuc">
+                    <label class="block font-semibold text-gray-700 mb-2">1. Đánh giá về hình thức tổ chức <span class="text-red-500">*</span></label>
+                    <div class="flex flex-wrap gap-1 md:gap-2 stars-container">
+                        <!-- JS sẽ render 10 sao vào đây -->
+                    </div>
+                    <input type="hidden" name="hinhThuc" required>
+                </div>
+
+                <!-- Nội dung -->
+                <div class="rating-group" data-category="noiDung">
+                    <label class="block font-semibold text-gray-700 mb-2">2. Đánh giá về nội dung tổ chức <span class="text-red-500">*</span></label>
+                    <div class="flex flex-wrap gap-1 md:gap-2 stars-container"></div>
+                    <input type="hidden" name="noiDung" required>
+                </div>
+
+                <!-- Bổ ích -->
+                <div class="rating-group" data-category="boIch">
+                    <label class="block font-semibold text-gray-700 mb-2">3. Đánh giá về sự bổ ích với bản thân <span class="text-red-500">*</span></label>
+                    <div class="flex flex-wrap gap-1 md:gap-2 stars-container"></div>
+                    <input type="hidden" name="boIch" required>
+                </div>
+
+                <!-- Góp ý -->
+                <div>
+                    <label class="block font-semibold text-gray-700 mb-2">4. Nội dung góp ý khác (không bắt buộc)</label>
+                    <textarea name="gopY" rows="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" placeholder="Hãy chia sẻ thêm ý kiến của bạn..."></textarea>
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition duration-200 flex items-center justify-center gap-2">
+                    <span>Gửi đánh giá</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Success Animation -->
+        <div id="successState" class="hidden text-center w-full bg-white p-10 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center">
+            <svg class="bounce-heart w-24 h-24 text-pink-500 mb-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+            <h2 class="text-3xl font-extrabold text-gray-800 mb-3">Yayyy! Cảm ơn bạn! 💖</h2>
+            <p class="text-gray-500">Đánh giá của bạn đã được ghi nhận thành công.</p>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-6 text-sm text-gray-500 border-t bg-white">
+        Hệ thống đánh giá được xây dựng bởi <a href="http://www.pridehome.vn" target="_blank" class="font-semibold text-blue-600 hover:underline">Pride Home</a>.
+    </footer>
+
+    <script>
+        // === CẤU HÌNH WEB APP URL TỪ GOOGLE APPS SCRIPT ===
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyv6tBnPVgqKEgReV4frL78TMIefUsDr4jrkHkMniq5Vmq4fxvRDJxO7X2UGqAFNSCP/exec"; 
+        
+        let currentEventId = null;
+
+        // Quản lý UI States
+        const ui = {
+            loading: document.getElementById('loadingState'),
+            message: document.getElementById('messageState'),
+            form: document.getElementById('formState'),
+            success: document.getElementById('successState'),
+            msgIcon: document.getElementById('messageIcon'),
+            msgText: document.getElementById('messageText'),
+            btn: document.getElementById('submitBtn')
+        };
+
+        function showState(state) {
+            Object.values(ui).forEach(el => {
+                if (el && el.classList) {
+                    if (['loadingState', 'messageState', 'formState', 'successState'].includes(el.id)) {
+                        el.classList.add('hidden');
+                    }
+                }
+            });
+            ui[state].classList.remove('hidden');
+        }
+
+        function showMessage(text, icon = "ℹ️") {
+            ui.msgIcon.innerHTML = icon;
+            ui.msgText.innerHTML = text;
+            showState('message');
+        }
+
+        // Render 10 stars cho mỗi nhóm
+        const starSVG = `<svg class="w-8 h-8 sm:w-10 sm:h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`;
+        
+        document.querySelectorAll('.rating-group').forEach(group => {
+            const container = group.querySelector('.stars-container');
+            const input = group.querySelector('input[type="hidden"]');
+            
+            for (let i = 1; i <= 10; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.innerHTML = starSVG;
+                star.dataset.value = i;
+                
+                // Hover effect
+                star.addEventListener('mouseenter', () => {
+                    const allStars = container.querySelectorAll('.star');
+                    allStars.forEach((s, idx) => {
+                        s.classList.toggle('hovered', idx < i);
+                    });
+                });
+                
+                container.addEventListener('mouseleave', () => {
+                    container.querySelectorAll('.star').forEach(s => s.classList.remove('hovered'));
+                });
+
+                // Click event
+                star.addEventListener('click', () => {
+                    input.value = i;
+                    container.querySelectorAll('.star').forEach((s, idx) => {
+                        if (idx < i) {
+                            s.classList.add('active');
+                            s.style.color = '#f59e0b';
+                        } else {
+                            s.classList.remove('active');
+                            s.style.color = '#d1d5db';
+                        }
+                    });
+                });
+                container.appendChild(star);
+            }
+        });
+
+        // Tải dữ liệu sự kiện
+        async function loadEventData() {
+            try {
+                const response = await fetch(WEB_APP_URL);
+                const data = await response.json();
+                
+                if (data.status === "NO_EVENT") {
+                    showMessage('Cổng đánh giá chưa mở, vui lòng liên hệ Quản trị viên. <br><span class="font-bold text-blue-600 mt-2 block">Hotline 0987.500.533</span> hoặc website <a href="http://www.pridehome.vn" class="text-blue-600 underline">www.pridehome.vn</a>', "🔒");
+                } else if (data.status === "MULTIPLE_EVENTS") {
+                    showMessage("Quản trị viên vui lòng chọn một sự kiện để mở đánh giá.", "⚠️");
+                } else if (data.status === "SUCCESS") {
+                    currentEventId = data.data.maSuKien;
+                    document.getElementById('eventTitle').innerText = data.data.tenSuKien;
+                    document.getElementById('eventDate').innerText = data.data.ngayToChuc;
+                    showState('form');
+                } else {
+                    showMessage("Đã xảy ra lỗi khi lấy dữ liệu sự kiện.", "❌");
+                }
+            } catch (error) {
+                showMessage("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại URL App Script.", "🔌");
+            }
+        }
+
+        // Xử lý gửi Form
+        document.getElementById('ratingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Validate sao bắt buộc
+            const hinhThuc = document.querySelector('input[name="hinhThuc"]').value;
+            const noiDung = document.querySelector('input[name="noiDung"]').value;
+            const boIch = document.querySelector('input[name="boIch"]').value;
+            
+            if (!hinhThuc || !noiDung || !boIch) {
+                alert("Vui lòng chọn số sao (từ 1-10) cho tất cả các tiêu chí đánh giá!");
+                return;
+            }
+
+            // Giao diện loading nút Submit
+            const originalBtnText = ui.btn.innerHTML;
+            ui.btn.disabled = true;
+            ui.btn.innerHTML = `<div class="loader" style="width:20px;height:20px;border-width:2px;"></div> Đang gửi...`;
+            ui.btn.classList.replace('bg-blue-600', 'bg-gray-400');
+
+            const payload = {
+                maSuKien: currentEventId,
+                hinhThuc: hinhThuc,
+                noiDung: noiDung,
+                boIch: boIch,
+                gopY: document.querySelector('textarea[name="gopY"]').value
+            };
+
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                if (data.status === "SUCCESS") {
+                    showState('success');
+                } else {
+                    alert("Có lỗi xảy ra: " + data.message);
+                    ui.btn.disabled = false;
+                    ui.btn.innerHTML = originalBtnText;
+                    ui.btn.classList.replace('bg-gray-400', 'bg-blue-600');
+                }
+            } catch (error) {
+                alert("Lỗi mạng khi gửi đánh giá. Vui lòng thử lại.");
+                ui.btn.disabled = false;
+                ui.btn.innerHTML = originalBtnText;
+                ui.btn.classList.replace('bg-gray-400', 'bg-blue-600');
+            }
+        });
+
+        // Khởi chạy
+        loadEventData();
+    </script>
+</body>
+</html>
